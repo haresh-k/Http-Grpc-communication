@@ -1,0 +1,97 @@
+plugins {
+    id 'java'
+    id 'com.google.protobuf' version '0.8.19'
+    id "org.springframework.boot" version "2.7.2"
+    id "io.spring.dependency-management" version "1.0.12.RELEASE"
+}
+
+group 'com.eventfetcher'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+def grpcVersion = '1.48.0'
+def protobufVersion = '3.21.1'
+def protocVersion = protobufVersion
+
+dependencies {
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation "com.google.protobuf:protobuf-java-util:${protobufVersion}"
+    implementation "javax.persistence:javax.persistence-api:2.2"
+    implementation 'org.springframework.boot:spring-boot-dependencies:2.7.0'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.7.2'
+    implementation 'org.apache.commons:commons-lang3:3.8.1'
+    implementation 'junit:junit:4.13.1'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:2.7.2'
+    implementation 'pl.project13.maven:git-commit-id-plugin:4.9.10'
+    compileOnly "org.projectlombok:lombok:1.18.24"
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation "com.google.protobuf:protoc:${protocVersion}"
+}
+
+springBoot  {
+    buildInfo()
+}
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:${protocVersion}" }
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" }
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
+}
+
+// Inform IDEs like IntelliJ IDEA, Eclipse or NetBeans about the generated code.
+sourceSets {
+    main {
+        java {
+            srcDirs 'build/generated/source/proto/main/grpc'
+            srcDirs 'build/generated/source/proto/main/java'
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+apply plugin: 'checkstyle'
+checkstyle {
+    toolVersion = "8.16"
+    ignoreFailures = false
+    showViolations = true
+    configFile file("config/checkstyle/checkstyle.xml")
+}
+checkstyleMain {
+    source ='src/main/java'
+}
+checkstyleTest {
+    source ='src/test/java'
+}
+/*
+// Usage of below configuration for PROD
+// 1. Maintain separate repository for the proto files
+// 2. use protoc to generate stubs using the proto files available at the github repo.
+// NOTE: Not using this configuration currently, code summit doesn't give direct access to the repo(Requires authentication).
+
+configurations { protoc }
+
+task proto(type: Exec) {
+    dependsOn configurations.protoc
+    //def file = configurations.protoc.singleFile
+    doFirst { mkdir "${buildDir}/generated/source/proto"}
+    commandLine "protoc",
+            "-I.",
+            "--java_out=${buildDir}/generated/source/proto",
+            //"http://konux-nxuuid@git.codesubmit.io/konux/senior-backend-1-oqrxja/Audit/src/main/proto/log.proto@v1.0.0" -- URL not working
+            "../Audit/src/main/proto/log.proto"
+}
+compileJava.dependsOn(proto)*/

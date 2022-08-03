@@ -1,0 +1,23 @@
+syntax = "proto3";
+//import "google/protobuf/empty.proto";
+
+package com.audit.stubs.log;
+option java_multiple_files = true;
+
+message LogRequest{
+  uint64 timestamp = 1;
+  uint64 userId = 2;
+  string event = 3;
+}
+
+message LogResponse{
+  string storageType = 1;
+}
+
+message ErrorResponse {
+  string errorMessage = 1;
+}
+
+service LogService{
+  rpc logEvent(LogRequest) returns (LogResponse);
+}
